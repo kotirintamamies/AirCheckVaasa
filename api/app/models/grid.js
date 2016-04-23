@@ -3,56 +3,56 @@ var Schema = mongoose.Schema;
  
 var gridSchema = new Schema({
   timestamp: {
-        type: string,
+        type: String,
         unique: true,
         required: true
     },
     time: {
         hour: {
-            type: number,
+            type: Number,
             required: true
         },
         day: {
-            type: number,
+            type: Number,
             required: true
         },
         month: {
-            type: number,
+            type: Number,
             required: true
         },
         year: {
-            type: number,
+            type: Number,
             required: true
         }
     },
   dimensions: {
         lat: 
         {
-            type: number,
+            type: Number,
             required: true
         },
         lng:
         {
-            type: number,
+            type: Number,
             required: true
   }},
     data:
     {
         temperature: 
         {
-            type: number,
+            type: Number,
         },
         humidity: 
         {
-            type: number,
+            type: Number,
         },
         airpressure: 
         {
-            type: number,
+            type: Number,
         },
         airqualityscore:
         {
-            type: number
+            type: Number
         },
         events:
         {
@@ -61,6 +61,11 @@ var gridSchema = new Schema({
         symptoms:
         {
             type: Array
+        },
+        measurements:
+        {
+            gas:
+            {type: Array}
         }
     }
     

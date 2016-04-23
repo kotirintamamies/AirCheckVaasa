@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
  
- var symptomSchema = new Schema({
+ var measureSchema = new Schema({
      timestamp: {
          type: String,
          unique: true,
@@ -23,11 +23,16 @@ var Schema = mongoose.Schema;
             type: Number,
             required: true
     }},
-    symptom:
+    measurement:
+    {
+        type: Number,
+        required: true
+    },
+    measurementtype:
     {
         type: String,
         required: true
     }
  })
  
- module.exports = mongoose.model('Symptom', symptomSchema);
+ module.exports = mongoose.model('Measurement', measureSchema);

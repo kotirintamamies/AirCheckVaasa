@@ -6,7 +6,9 @@ var mongoose    = require('mongoose');
 var passport	= require('passport');
 var config      = require('./config/database'); // get db config file
 var User        = require('./app/models/user'); // get the mongoose model
-var Grid = require('./app/models/grid')
+var Grid = require('./app/models/grid');
+var Symptom = require('./app/models/symptom');
+var Measurement = require('./app/models/measurement');
 var port        = process.env.PORT || 8080;
 var jwt         = require('jwt-simple');
  
@@ -54,7 +56,7 @@ apiRoutes.post('/signup', function(req, res) {
 });
 
 apiRoutes.post('/grid', function(req, res) {
-  if(!req.body.timestamp||!req.body.dimensions.lat||req.body.dimensions.lng)
+  if(!req.body.timestamp||!req.body.dimensions.lat||!req.body.dimensions.lng)
   {
     res.json({success: false, msg: "required info missing"});
   }
@@ -74,14 +76,15 @@ apiRoutes.post('/grid', function(req, res) {
   });
 
 apiRoutes.post('/symptom', function(req, res) {
-  if(!req.body.timestamp||!req.body.dimensions.lat||req.body.dimensions.lng)
+
+  if(!req.body.timestamp||!req.body.dimensions.lat||!req.body.dimensions.lng)
   {
     res.json({success: false, msg: "required info missing"});
   }
   else
   {
-      var  newGrid = new Grid(req.body);
-      newGrid.save(function(err)
+      var  newSymptom = new Symptom(req.body);
+      newSymptom.save(function(err)
       {
         if(!err)
           return res.json({success: true, msg: 'symptom posted.'});
@@ -90,6 +93,19 @@ apiRoutes.post('/symptom', function(req, res) {
       })
   }
   });
+  
+  apiRoutes.post('/measurement', function(req, res) {
+
+      var  newSymptom = new Measurement(req.body);
+      newSymptom.save(function(err)
+      {
+        if(!err)
+          return res.json({success: true, msg: 'measurement posted.'});
+          else
+          return res.json({success: false, msg: 'failed.'});
+      })
+  }
+  );
 
  // route to authenticate a user (POST http://localhost:8080/api/authenticate)
 apiRoutes.post('/authenticate', function(req, res) {
@@ -136,7 +152,37 @@ apiRoutes.get('/memberinfo', passport.authenticate('jwt', { session: false}), fu
     return res.status(403).send({success: false, msg: 'No token provided.'});
   }
 });
+apiRoutes.get('/grid', function(req, res){
+  var date = new(Date);
+  var y = date.getFullYear();
+  var m = date.getMonth();
+  var d = date.getDay();
+  var q = {};
+  if(req.param('year'));
+  {
+    y = req.param('year');
+    if(req.param('month'));
+    {
+      m = req.param('month');
+      if(req.param('day'))
+      {
+        d = req.param('day');
+        if(req.param('hour'));
+         var h = req.param('hour');
+      }
+    }
+  }
+  q = {time: {hour: parseInt(h), day: parseInt(d), month: parseInt(m), year: parseInt(y)}};
+  var query = Grid.find(q);
+  query.select();
+  return query.exec(function(err, grid)
+  {
+    if(grid)
+      return res.json({success: true, data: grid});
+  })
  
+})
+
 getToken = function (headers) {
   if (headers && headers.authorization) {
     var parted = headers.authorization.split(' ');
@@ -155,4 +201,39 @@ app.use('/api', apiRoutes);
  
 // Start the server
 app.listen(port);
-console.log('There will be dragons: http://localhost:' + port);
+console.log('server running at: http://localhost:' + port);
+
+//inner functions
+function getSymptomsByHour(hr, lati, long)
+{
+  var query = Symptom.find({hour: hr, dimensions:{lat: lati, lng: long}});
+  query.select();
+ return query.exec(function(err, symptom)
+  {
+    if(symptom)
+      return symptom;
+  })
+}
+
+function getMeasurementsByHour(hr, lati, long)
+{
+  var query = Measurement.find({hour: hr, dimensions:{lat: lati, lng: long}});
+  query.select();
+ return query.exec(function(err, measurement)
+  {
+    if(measurement)
+      return measurement;
+  })
+}
+
+function deleteSymptomsByHour(hr)
+{
+  var query = Symptom.remove({hour: hr})
+  query.exec();
+}
+
+function deleteMeasurementsByHour(hr)
+{
+  var query = Measurement.remove({hour: hr})
+  query.exec();
+}
