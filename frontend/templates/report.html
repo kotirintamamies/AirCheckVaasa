@@ -1,4 +1,4 @@
-<form layout="column" class="md-padding" ng-submit="Report.submit(Report.symptom, Report.severity)">
+<form ng-show="!sent"layout="column" class="md-padding" ng-submit="Report.submit(Report.symptom, Report.severity)">
     <md-input-container layout="row">
         <label>Select symptom here</label>
         <md-select flex ng-model="Report.symptom">
@@ -15,3 +15,4 @@
         </md-button>
 </div>
 </form>
+<md-card class="md-padding"ng-show="sent"><h4>Symptoms successfully submitted to our servers!</h4></md-card>

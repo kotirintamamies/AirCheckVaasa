@@ -6,10 +6,11 @@
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet">
 </head>
-<body ng-app="BlankApp" ng-cloak>
+<body>
   <!--
     Your HTML content here
   -->  
+  <md-content  style="max-height:100%;" layout="column">
   <md-toolbar>
       <md-toolbar-tools layout="row">
           <md-button style="margin-top: 15px;" class="md-icon-button md-accent" href="#/map">
@@ -23,6 +24,8 @@
           </md-toolbar-tools>
       </md-toolbar>
   <ng-view></ng-view>
+  </md-content>
+  
   <!-- Angular Material requires Angular.js Libraries -->
   <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
   <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.min.js"></script>
@@ -32,9 +35,11 @@
 
   <!-- Angular Material Library -->
   <script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.js"></script>
-  
+   <script src="https://maps.googleapis.com/maps/api/js?callback=initMap"
+    async defer></script>
   <!-- Your application bootstrap  -->¨
   <script src= "/webapp/app.js"></script>
+    <script src= "/ng-map.min.js"></script>
     <script src= "/webapp/controllers.js"></script>
   <script type="text/javascript">    
   </script>

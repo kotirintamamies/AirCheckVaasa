@@ -1,4 +1,4 @@
-var aircheckvaasa = angular.module('aircheckvaasa', ['ngRoute','ngMaterial']);
+var aircheckvaasa = angular.module('aircheckvaasa', ['ngMap','ngRoute','ngMaterial']);
 
 aircheckvaasa.config(
     function($routeProvider, $mdThemingProvider)

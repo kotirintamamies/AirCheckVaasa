@@ -1,35 +1,49 @@
-aircheckvaasa.controller('mapCtrl', function()
+aircheckvaasa.controller('mapCtrl', function($rootScope)
 {
+    $rootScope.showmap=true;
     
 })
 
-aircheckvaasa.controller('reportCtrl', function()
+aircheckvaasa.controller('reportCtrl', function($rootScope, $http, $location)
 {
-    this.submit(symptom, severity)
+    $rootScope.showmap=false;
+    $rootScope.sent = false;
+    var day = new Date();
+    if(!$rootScope.hour)
+        {
+            
+            $rootScope.hour=day.getHours()-1;}
+    this.submit= function(symp, seve)
     {
-        if (navigator.geolocation) {
+         var d = new Date();
+        if (navigator.geolocation && $rootScope.hour<d.getHours()) {
             navigator.geolocation.getCurrentPosition(
                 function(position)
                 {
-                    var d = new Date();
-                    var obj = {
-                        timestamp: d.toLocaleString,
-                        hour: d.getHours,
+                   
+                    var obj = 
+                    {
+                        timestamp: d.toLocaleString(),
+                        hour: d.getHours(),
                         dimensions:
                         {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude
-                        }
+                            lat: Math.floor(position.coords.latitude),
+                            lng: Math.floor(position.coords.longitude)
+                        },
+                        symptom: symp+','+seve.toString()
                     }
-                   console.log(obj);
+                   $http.post( 'http://localhost:8080/api/symptom',
+                       obj).then(function(res)
+                       {
+                           $rootScope.sent = true;
+                           $rootScope.hour=d.getHours();
+                       })
                 }
                 
             );
-         
-
-
+  
         }
-        }
+        
     }
     this.symptoms = 
     [
