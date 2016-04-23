@@ -1,0 +1,17 @@
+<form layout="column" class="md-padding" ng-submit="Report.submit(Report.symptom, Report.severity)">
+    <md-input-container layout="row">
+        <label>Select symptom here</label>
+        <md-select flex ng-model="Report.symptom">
+            <md-option ng-value = "symptom" ng-repeat="symptom in Report.symptoms">{{symptom}}</md-option>
+        </md-select>
+    </md-input-container>
+    <h3>How severe are your symptoms?</h3>
+    <md-slider min="1" max="100" ng-model="Report.severity"></md-slider>
+<div flex></div>
+<div layout="row">
+    <span flex></span>
+    <md-button type="submit" ng-show="Report.symptom" class="md-fab md-mini md-accent">
+        <i class="material-icons" >done</i>
+        </md-button>
+</div>
+</form>

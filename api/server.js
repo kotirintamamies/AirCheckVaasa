@@ -23,9 +23,7 @@ app.use(morgan('dev'));
 app.use(passport.initialize());
  
 // demo Route (GET http://localhost:8080)
-app.get('/', function(req, res) {
-  res.send('Hello! The API is at http://localhost:' + port + '/api');
-});
+app.use('/', express.static('frontend'));
  
  // connect to database
 mongoose.connect(config.database);
