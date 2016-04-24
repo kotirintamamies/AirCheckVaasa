@@ -34,7 +34,7 @@ aircheckvaasa.controller('mapCtrl', function($scope,$rootScope, $http, NgMap)
         if (res.data.risk>0.1)
             ris = "#FFFF00";
         if (res.data.risk>0.7)
-            ris = "FFFF00";
+            ris = "#FF0000";
             
         var box = {lat: latitude+1, long: longitude+1, riskcolor:ris, risk: res.data.risk}
        /*res.data.events.forEach(function(ev)
@@ -46,7 +46,7 @@ aircheckvaasa.controller('mapCtrl', function($scope,$rootScope, $http, NgMap)
     })}
 })
 
-aircheckvaasa.controller('reportCtrl', function($rootScope, $http, $location)
+aircheckvaasa.controller('reportCtrl', function($scope, $rootScope, $http, $location)
 {
     $rootScope.showmap=false;
     $rootScope.sent = false;
