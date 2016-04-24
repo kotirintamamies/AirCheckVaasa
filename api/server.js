@@ -12,6 +12,7 @@ var Measurement = require('./app/models/measurement');
 var port        = process.env.PORT || 8080;
 var jwt         = require('jwt-simple');
 var request=require('request');
+var Forecast = require('forecast');
  
 // get our request parameters
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -173,6 +174,7 @@ apiRoutes.get('/grid', function(req, res){
   }
   q = {time: {hour: parseInt(h), day: parseInt(d), month: parseInt(m), year: parseInt(y)}};
   var query = Grid.find(q);
+   var query = Grid.find();
   query.select();
   return query.exec(function(err, grid)
   {
@@ -185,7 +187,14 @@ apiRoutes.get('/grid', function(req, res){
 apiRoutes.get('/boxes', function(req, res){
   var lat = Math.floor(parseFloat(req.param('latitude')));
   var long = Math.floor(parseFloat(req.param('longitude')));
-  return res.json(boxes[lat+','+long])
+  return res.json({box: boxes[lat+','+long], risk: calculatescore(boxes[lat+','+long].symptoms, boxes[lat+','+long].events, boxes[lat+','+long].airpollution)})
+})
+
+apiRoutes.get('/clrsymp', function(req, res){
+  if (req.param('owkefwef')=="afseaaf")
+      var query = Symptom.remove()
+  query.exec();
+  return res.json({"msg": "bye bye symptoms"});
   
 })
 
@@ -210,9 +219,9 @@ app.listen(port);
 console.log('server running at: http://localhost:' + port);
 
 //inner functions
-function getSymptomsByHour(hr, lati, long)
+function getSymptomsByHour(hr)
 {
-  var query = Symptom.find({hour: hr, dimensions:{lat: lati, lng: long}});
+  var query = Symptom.find({hour: hr});
   query.select();
  return query.exec(function(err, symptom)
   {
@@ -249,27 +258,32 @@ hourly();
 
 function hourly()
 {
-  var ev = [];
+  pushevents();
+  pushsymptoms();
+}
+
+function pushevents()
+{
+    var ev = [];
   request('http://eonet.sci.gsfc.nasa.gov/api/v2.1/events', function (error, response, body) {
-  if (!error && response.statusCode == 200) {
-    var cats = [6, 7, 16, 9, 19, 10, 17, 18, 12, 8];
-    var obj = {boxes: []};
-    var even = JSON.parse(body);
-    even.events.forEach(function(event)
-    {
-      var push = false;
-      event["categories"].forEach(function(cat)
+    if (!error && response.statusCode == 200) {
+      var cats = [6, 7, 16, 9, 19, 10, 17, 18, 12, 8];
+      var obj = {boxes: []};
+      var even = JSON.parse(body);
+      even.events.forEach(function(event)
       {
-        for(var i = 0; i<cats.length;i++)
-          if(cat.id==cats[i])
-            push=true;
+        var push = false;
+        event["categories"].forEach(function(cat)
+        {
+          for(var i = 0; i<cats.length;i++)
+            if(cat.id==cats[i])
+              push=true;
+        })
+        if(push)
+          makeboxes(event.title, event.geometries);
       })
-      if(push)
-        makeboxes(event.title, event.geometries);
-    })
-    console.log(boxes);
-  }
-})
+    }
+  })
 }
 
 function makeboxes(tit, geo)
@@ -278,18 +292,123 @@ function makeboxes(tit, geo)
   {
     if(geometry.coordinates[0].isArray)
       makeboxes(tit, geometry)
-    else
+    else if( !isNaN(geometry.coordinates[0]))
     {
-      if(!boxes[Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1])])
-       boxes[Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1])]={};
-      if(!boxes[Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1])].events)
-        boxes[Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1])].events=[tit];
+      var boxname = Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1]);
+      if(!boxes[boxname])
+       boxes[boxname]={};
+      if(!boxes[boxname].events)
+        boxes[boxname].events=[tit];
       else
-        boxes[Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1])]["events"].push(tit);
-        
-    boxes[Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1])].events = boxes[Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1])].events.filter(function(item, pos) {
-    return boxes[Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1])].events.indexOf(item) == pos;
-})
+        boxes[boxname]["events"].push(tit);
+      if(!boxes[boxname]["temperature"])
+        pushweathertobox(Math.floor(geometry.coordinates[0]), Math.floor(geometry.coordinates[1]))
+    boxes[boxname].events = boxes[boxname].events.filter(function(item, pos) {
+    return boxes[boxname].events.indexOf(item) == pos;
+    })
     }
   })
+}
+
+
+function pushsymptoms()
+{
+  var d = new Date();
+  getSymptomsByHour(d.getHours()).then(function(res)
+  {
+    var symps = [];
+    var boxname = '63,21';
+    boxes[boxname] = {symptoms: []};
+    res.forEach(function (symp)
+    {
+
+        //var boxname = symp.dimensions.lat + ','+symp.dimensions.lng;
+        symps.push(symp.symptom.toString());
+        //console.log(symp)
+        /*var boxname = symp.dimensions.lat + ','+symp.dimensions.lng;
+        if(!boxes[boxname])
+        boxes[boxname]={};
+        if(!boxes[boxname][symptoms])
+          boxes[boxname].symptoms=[];
+
+        boxes[boxname]["symptoms"].push(symp.symptom);
+        console.log(boxes[boxname])
+        if(!boxes[boxname]["humidity"])*/
+         // pushweathertobox(Math.floor(geometry.coordinates[0]), Math.floor(geometry.coordinates[1]))
+      })
+      console.log(symps)
+          boxes[boxname].symptoms=symps;
+          console.log(boxes)
+          
+    })
+}
+
+var forecast = new Forecast({
+    service: 'forecast.io',
+    key: '',
+    units: 'celsius', // Only the first letter is parsed
+    cache: true,      // Cache API requests?
+    ttl: {            // How long to cache requests. Uses syntax from moment.js: http://momentjs.com/docs/#/durations/creating/
+        minutes: 10,
+        seconds: 0
+    }
+});
+function pushweathertobox(lat, lng)
+{
+  var airPollution;
+        // Retrieve weather information, ignoring the cache
+        forecast.get([lat, lng], true, function (err, weather) {
+            if (err) return console.dir(err);
+            var headers = {
+                'User-Agent': 'Super Agent/0.0.1',
+                'Content-Type': 'application/json'
+            };
+            var options = {
+                url: 'http://api.breezometer.com/baqi/',
+                headers: headers,
+                method: 'GET',
+                qs: {'lat': lat, 'lon': lng, 'key': ''}
+            };
+                request(options, function (error, response, body) {
+                var bodyObject = JSON.parse(body);
+                if (!error && response.statusCode == 200) {
+                    if (bodyObject.data_valid)
+                        airPollution = String(bodyObject.breezometer_aqi);
+                    else
+                        airPollution = null;
+                if (weather)
+                    {
+                      var curr = weather.currently;
+                     // boxes[lat + ','+lng].temperature = curr.temperature;
+                      boxes[lat + ','+lng].humidity = curr.humidity;
+                      boxes[lat + ','+lng].airpollution = airPollution;
+                  }
+                }
+             });
+        });
+}
+
+function calculatescore(symptoms, pollution, events)
+{
+  console.log(symptoms)
+  console.log(pollution)
+  console.log(events)
+  var risklevel = 0;
+  if(events)
+    risks.push(0.5)
+  if (pollution)
+    risks.push(pollution/300);
+  
+  var risks = [];
+  var symps = [];
+  symptoms.forEach(function (symp)
+  {
+    var temp = symp.split(',');
+    symps.push(parseInt(temp[1])/100);
+  })
+  var sum = symps.reduce(function(a, b) { return a + b; });
+  console.log(symps);
+  risks.push (sum / symps.length);
+  console.log(risks);
+  return((risks.reduce(function(a, b) { return a + b; }))/risks.length)
 }

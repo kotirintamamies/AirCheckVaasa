@@ -1,7 +1,7 @@
-<ng-map style="height: 85%" center="{{mylocation}}">
-        <shape ng-repeat="box in boxes" id="rectangle" name="rectangle" stroke-color='#FF0000'
+<ng-map style="height: 85%" center="[63,21]">
+        <shape ng-repeat="box in boxes" id="rectangle" name="rectangle" fill-opacity="{{box.risk}}" fill-color='{{box.riskcolor}}'
       stroke-opacity="0.8" stroke-weight="2"
-      bounds="[[{{box.lat}},{{box.long}}], [{{box.lat+1}},{{box.long+1}}]]" editable="false" >
-      {{box}}
+      bounds="[[63,21], [64,22]]" editable="false" >
+
     </shape>
     </ng-map>
