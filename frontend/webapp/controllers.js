@@ -1,7 +1,39 @@
-aircheckvaasa.controller('mapCtrl', function($rootScope)
+aircheckvaasa.controller('mapCtrl', function($scope,$rootScope, $http, NgMap)
 {
+    navigator.geolocation.getCurrentPosition(
+    function(position)
+    {
+        NgMap.getMap().then(function(map) {
+            console.log(map.getCenter())
+            map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude))
+        });
+        var latilongi = [];
+        var lati = Math.floor(position.coords.latitude)
+        var longi = Math.floor(position.coords.longitude)
+        $scope.myposition = [position.coords.latitude, position.coords.longitude]
+        for (var i = lati-3;i<=lati+3;i++)
+        {
+            for (var j = longi-3;j<=longi+3;j++)
+                latilongi.push[i, j]
+        }
+        latilongi.forEach(function(box)
+        {
+            getbox(box[0], box[1]);
+            })
+    });
     $rootScope.showmap=true;
-    
+    $scope.myposition = [];
+    $scope.boxes = [];
+    function getbox(latitude, longitude)
+    {$http.get('http://localhost:8080/api/boxes?latitude='+latitude+'&longitude='+longitude).then(function (res)
+    {
+        var box = {lat: latitude+1, long: longitude+1, events:[]}
+       res.data.events.forEach(function(ev)
+       {
+           box.events.push(ev);
+       })
+      $scope.boxes.push(box);
+    })}
 })
 
 aircheckvaasa.controller('reportCtrl', function($rootScope, $http, $location)

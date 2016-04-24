@@ -1,4 +1,4 @@
-<html lang="en" ng-app="aircheckvaasa" >
+<html style="width:100%;height:100%" lang="en" ng-app="aircheckvaasa" >
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Angular Material style sheet -->
@@ -6,11 +6,10 @@
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet">
 </head>
-<body>
+<body style="width:100%;height:100%">
   <!--
     Your HTML content here
   -->  
-  <md-content  style="max-height:100%;" layout="column">
   <md-toolbar>
       <md-toolbar-tools layout="row">
           <md-button style="margin-top: 15px;" class="md-icon-button md-accent" href="#/map">
@@ -23,8 +22,7 @@
           <h3>#AirCheckVaasa</h3><span flex></span>
           </md-toolbar-tools>
       </md-toolbar>
-  <ng-view></ng-view>
-  </md-content>
+  <ng-view flex></ng-view>
   
   <!-- Angular Material requires Angular.js Libraries -->
   <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>

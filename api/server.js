@@ -11,6 +11,7 @@ var Symptom = require('./app/models/symptom');
 var Measurement = require('./app/models/measurement');
 var port        = process.env.PORT || 8080;
 var jwt         = require('jwt-simple');
+var request=require('request');
  
 // get our request parameters
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -181,6 +182,13 @@ apiRoutes.get('/grid', function(req, res){
  
 })
 
+apiRoutes.get('/boxes', function(req, res){
+  var lat = Math.floor(parseFloat(req.param('latitude')));
+  var long = Math.floor(parseFloat(req.param('longitude')));
+  return res.json(boxes[lat+','+long])
+  
+})
+
 getToken = function (headers) {
   if (headers && headers.authorization) {
     var parted = headers.authorization.split(' ');
@@ -234,4 +242,54 @@ function deleteMeasurementsByHour(hr)
 {
   var query = Measurement.remove({hour: hr})
   query.exec();
+}
+var boxes = {};
+hourly();
+
+
+function hourly()
+{
+  var ev = [];
+  request('http://eonet.sci.gsfc.nasa.gov/api/v2.1/events', function (error, response, body) {
+  if (!error && response.statusCode == 200) {
+    var cats = [6, 7, 16, 9, 19, 10, 17, 18, 12, 8];
+    var obj = {boxes: []};
+    var even = JSON.parse(body);
+    even.events.forEach(function(event)
+    {
+      var push = false;
+      event["categories"].forEach(function(cat)
+      {
+        for(var i = 0; i<cats.length;i++)
+          if(cat.id==cats[i])
+            push=true;
+      })
+      if(push)
+        makeboxes(event.title, event.geometries);
+    })
+    console.log(boxes);
+  }
+})
+}
+
+function makeboxes(tit, geo)
+{
+  geo.forEach(function (geometry)
+  {
+    if(geometry.coordinates[0].isArray)
+      makeboxes(tit, geometry)
+    else
+    {
+      if(!boxes[Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1])])
+       boxes[Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1])]={};
+      if(!boxes[Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1])].events)
+        boxes[Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1])].events=[tit];
+      else
+        boxes[Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1])]["events"].push(tit);
+        
+    boxes[Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1])].events = boxes[Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1])].events.filter(function(item, pos) {
+    return boxes[Math.floor(geometry.coordinates[0]) + ','+Math.floor(geometry.coordinates[1])].events.indexOf(item) == pos;
+})
+    }
+  })
 }

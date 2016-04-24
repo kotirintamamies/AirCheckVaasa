@@ -1,1 +1,7 @@
-<ng-map style="overflow: hidden;" center="[40.74, -74.18]"></ng-map>
+<ng-map style="height: 85%" center="{{mylocation}}">
+        <shape ng-repeat="box in boxes" id="rectangle" name="rectangle" stroke-color='#FF0000'
+      stroke-opacity="0.8" stroke-weight="2"
+      bounds="[[{{box.lat}},{{box.long}}], [{{box.lat+1}},{{box.long+1}}]]" editable="false" >
+      {{box}}
+    </shape>
+    </ng-map>
